@@ -1,0 +1,111 @@
+object Form1: TForm1
+  Left = 48
+  Height = 335
+  Top = 250
+  Width = 685
+  Caption = 'Aug Mods Checker'
+  ClientHeight = 335
+  ClientWidth = 685
+  Color = clWhite
+  Constraints.MinHeight = 335
+  Constraints.MinWidth = 685
+  OnCreate = FormCreate
+  object Logger: TMemo
+    Left = 368
+    Height = 335
+    Top = 0
+    Width = 317
+    Align = alRight
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 0
+  end
+  object Label1: TLabel
+    Left = 8
+    Height = 13
+    Top = 8
+    Width = 71
+    Caption = 'Mods directory'
+    ParentColor = False
+  end
+  object EditModsPath: TEdit
+    Left = 8
+    Height = 21
+    Top = 32
+    Width = 304
+    OnChange = EditModsPathChange
+    TabOrder = 1
+    TextHint = 'Path to mods directory or game name (Minecraft)'
+  end
+  object Button1: TButton
+    Left = 320
+    Height = 21
+    Top = 32
+    Width = 40
+    Caption = 'Select'
+    OnClick = Button1Click
+    TabOrder = 2
+  end
+  object Label2: TLabel
+    Left = 9
+    Height = 13
+    Top = 72
+    Width = 77
+    Caption = 'Mods server link'
+    ParentColor = False
+  end
+  object EditModsURL: TEdit
+    Left = 9
+    Height = 21
+    Top = 96
+    Width = 304
+    OnChange = EditModsPathChange
+    TabOrder = 3
+    TextHint = 'Link to the mods server'
+  end
+  object Button2: TButton
+    Left = 256
+    Height = 25
+    Top = 296
+    Width = 104
+    Anchors = [akLeft, akBottom]
+    Caption = 'Synchronize'
+    OnClick = Button2Click
+    TabOrder = 4
+  end
+  object Button3: TButton
+    Left = 128
+    Height = 25
+    Top = 296
+    Width = 112
+    Anchors = [akLeft, akBottom]
+    Caption = 'Save configuration'
+    OnClick = Button3Click
+    TabOrder = 5
+  end
+  object Button4: TButton
+    Left = 9
+    Height = 25
+    Top = 296
+    Width = 104
+    Anchors = [akLeft, akBottom]
+    Caption = 'Generate MD5'
+    OnClick = Button4Click
+    TabOrder = 6
+  end
+  object ProgressBar1: TProgressBar
+    Left = 9
+    Height = 20
+    Top = 264
+    Width = 351
+    Anchors = [akLeft, akBottom]
+    Step = 1
+    TabOrder = 7
+    BarShowText = True
+  end
+  object SelectDirectoryDialog1: TSelectDirectoryDialog
+    left = 512
+    top = 96
+  end
+end
