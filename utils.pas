@@ -39,12 +39,11 @@ type
   public
     URL: string;
     MD5List: TJSONObject;
-    FilesList: TJSONArray;
     hasmd5: Boolean;
     procedure Execute; override;
     procedure GetFilesList;
-    procedure CompareFiles(tree: TJSONArray);
-    procedure UpdateFiles;
+    procedure CompareFiles(tree: TJSONArray;comp_path: string);
+    procedure UpdateFiles(comp_path: string;flist: TJSONArray);
     constructor Create(name: string);
 end;
 
@@ -53,6 +52,7 @@ uses
   main;
 var
   requests: TRequests;
+  ignore: TStringList;
 
 procedure logWrite(str: String);
 var
@@ -295,14 +295,13 @@ begin
   );
   tree := TJSONObject(requests.json()).Arrays['tree'];
   logwrite(Format('Parsed %d files from %s',[tree.Count,URL]));
-  CompareFiles(tree);
+  CompareFiles(tree,main.Form1.EditModsPath.text);
 end;
 
 constructor TGit.Create(name: string);
 begin
   hasmd5 := True;
   URL := name;
-  FilesList := TJSONArray.Create;
   FreeOnTerminate := True;
   inherited Create(false);
   requests.get(Format('https://raw.githubusercontent.com/%s/master/md5list.json',[URL]));
@@ -316,29 +315,40 @@ begin
   //MD5List := TJSONObject(GetJSON(readfile('md5list.json')));
 end;
 
-procedure TGit.CompareFiles(tree: TJSONArray);
+procedure TGit.CompareFiles(tree: TJSONArray; comp_path: string);
 var
   i,i1: Integer;
+  dir_tree, FilesList: TJSONArray;
   fobj, tmpobj: TJSONObject;
-  md5_orig, md5, fname: string;
+  md5_orig, md5, fname, dir_name: string;
   all_files: TStringList;
   farray: TStringArray;
 begin
-  main.Form1.Logger.Lines.Add('');
-  logwrite('Starting compare files');
+  FilesList := TJSONArray.Create;
+  //main.Form1.Logger.Lines.Add('');
+  logwrite('Starting compare files in '+comp_path);
   for i:=0 to tree.Count-1 do
   begin
     fobj := tree.Objects[i];
     if fobj['type'].AsString = 'tree' then
-       continue;
-    if fobj['path'].AsString = 'md5list.json' then
+    begin
+      dir_name := comp_path +'\'+fobj['path'].AsString;
+      requests.Get(
+        fobj['url'].AsString
+      );
+      dir_tree := TJSONObject(requests.json()).Arrays['tree'];
+      logwrite('Recursively checking a '+dir_name+' folder');
+      CreateDir(dir_name);
+      CompareFiles(dir_tree,dir_name);
+    end;
+    if ignore.IndexOf(fobj['path'].AsString) <> -1 then
        continue;
 
     tmpobj := TJSONObject.Create;
     tmpobj.add('name',fobj['path'].AsString);
     tmpobj.add('url',Format('https://raw.githubusercontent.com/%s/master/%s',[url,fobj['path'].AsString]));
 
-    all_files := FindAllFiles(main.Form1.EditModsPath.Text,'*', False);
+    all_files := FindAllFiles(comp_path,'*', False);
     for i1:=0 to all_files.Count-1 do
     begin
       farray := all_files[i1].split('\');
@@ -350,7 +360,7 @@ begin
       end;
     end;
 
-    if not FileExists(main.Form1.EditModsPath.text+'\'+fobj['path'].AsString) then
+    if not FileExists(comp_path+'\'+fobj['path'].AsString) then
     begin
       logWrite('Compare '+fobj['path'].AsString);
        if MD5List.IndexOfName(fobj['path'].AsString) = -1 then
@@ -360,7 +370,7 @@ begin
        continue;
     end;
     md5_orig := MD5List[fobj['path'].AsString].AsString;
-    md5 := MD5Print(MD5File(main.Form1.EditModsPath.text+'\'+fobj['path'].AsString));
+    md5 := MD5Print(MD5File(comp_path+'\'+fobj['path'].AsString));
 
     if md5_orig <> md5 then
        FilesList.add(tmpobj);
@@ -368,26 +378,26 @@ begin
   main.Form1.Logger.Lines.Add('');
   logWrite(inttostr(FilesList.Count)+' mods will be downloaded');
   main.Form1.ProgressBar1.Max := FilesList.Count;
-  UpdateFiles;
+  UpdateFiles(comp_path,FilesList);
 end;
 
-procedure TGit.UpdateFiles;
+procedure TGit.UpdateFiles(comp_path: string; flist: TJSONArray);
 var
   i: integer;
   fobj: TJSONObject;
 begin
   main.Form1.Logger.Lines.Add('');
-  for i:=0 to FilesList.Count-1 do
+  for i:=0 to flist.Count-1 do
   begin
-    fobj := FilesList.Objects[i];
+    fobj := flist.Objects[i];
 
-    if FileExists(main.Form1.EditModsPath.text+'\'+fobj['name'].AsString) then
-       DeleteFile(main.Form1.EditModsPath.text+'\'+fobj['name'].AsString);
+    if FileExists(comp_path+'\'+fobj['name'].AsString) then
+       DeleteFile(comp_path+'\'+fobj['name'].AsString);
 
     logwrite('Download '+fobj['name'].AsString);
     requests.Download(
       fobj['url'].AsString,
-      main.Form1.EditModsPath.text+'\'+fobj['name'].AsString
+      comp_path+'\'+fobj['name'].AsString
     );
     main.Form1.ProgressBar1.StepIt;
   end;
@@ -403,6 +413,9 @@ end;
 
 begin
   requests := TRequests.Create;
+  ignore := TStringList.Create;
+  ignore.Add('.gitignore');
+  ignore.Add('.git');  //TODO: add ignorelist.json to servers
 end.
 
 

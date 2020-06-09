@@ -1,0 +1,8 @@
+
+lib/*
+build/*
+backup/*
+*.dll
+*.exe
+config.json
+augmc.res

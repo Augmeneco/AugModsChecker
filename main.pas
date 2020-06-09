@@ -46,6 +46,7 @@ implementation
 { TForm1 }
 var
   requests: TRequests;
+  md5obj: TJSONObject;
 
 procedure TForm1.FormCreate(Sender: TObject);
 var
@@ -96,16 +97,14 @@ begin
   logwrite('Saved config.json');
 end;
 
-procedure TForm1.Button4Click(Sender: TObject);
+procedure GenMD5(path: string);
 var
   f_list: TStringList;
   md5, filename: string;
   farray: TStringArray;
-  md5obj: TJSONObject;
   i: integer;
 begin
-  md5obj := TJSONObject.Create;
-  f_list := FindAllFiles(EditModsPath.Text,'*', False );
+  f_list := FindAllFiles(path,'*', true );
   logwrite('[ Creating md5list.json ]'+LineEnding+'Found '+inttostr(f_list.count)+' files:');
 
   for i:=0 to f_list.Count-1 do
@@ -115,10 +114,15 @@ begin
     filename := farray[Length(farray)-1];
     md5 := MD5Print(MD5File(f_list[i]));
     md5obj.Add(filename,md5);
-    Logger.Lines.Add(#9+filename);
+    Form1.Logger.Lines.Add(#9+filename);
   end;
   writefile('md5list.json',md5obj.FormatJSON());
   logwrite('Saved md5list.json');
+end;
+
+procedure TForm1.Button4Click(Sender: TObject);
+begin
+  GenMD5(EditModsPath.text);
 end;
 
 procedure TForm1.EditModsPathChange(Sender: TObject);
@@ -140,6 +144,6 @@ end;
 
 begin
   requests := TRequests.Create;
-
+  md5obj := TJSONObject.Create;
 end.
 
