@@ -346,7 +346,10 @@ begin
 
     tmpobj := TJSONObject.Create;
     tmpobj.add('name',fobj['path'].AsString);
-    tmpobj.add('url',Format('https://raw.githubusercontent.com/%s/master/%s',[url,fobj['path'].AsString]));
+
+    farray := comp_path.split('\');
+
+    tmpobj.add('url',Format('https://raw.githubusercontent.com/%s/master/%s/%s',[url,farray[Length(farray)-1],fobj['path'].AsString]));
 
     all_files := FindAllFiles(comp_path,'*', False);
     for i1:=0 to all_files.Count-1 do
@@ -393,7 +396,6 @@ begin
 
     if FileExists(comp_path+'\'+fobj['name'].AsString) then
        DeleteFile(comp_path+'\'+fobj['name'].AsString);
-
     logwrite('Download '+fobj['name'].AsString);
     requests.Download(
       fobj['url'].AsString,
