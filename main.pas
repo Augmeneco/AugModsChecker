@@ -55,7 +55,8 @@ var
 begin
 
   requests.get('https://raw.githubusercontent.com/Augmeneco/AugModsChecker/master/version');
-  logwrite(Format('|%s|',[requests.text]));
+  if requests.text = '1.1.3'+#10 then
+     logwrite(Format('|%s|',[requests.text]));
 
   if FileExists('config.json') then
   begin
