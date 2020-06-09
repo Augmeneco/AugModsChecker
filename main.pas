@@ -38,6 +38,7 @@ type
 
 var
   Form1: TForm1;
+  version: string;
 
 implementation
 
@@ -52,6 +53,10 @@ procedure TForm1.FormCreate(Sender: TObject);
 var
   config: TJSONObject;
 begin
+
+  requests.get('https://raw.githubusercontent.com/Augmeneco/AugModsChecker/master/version');
+  logwrite(Format('|%s|',[requests.text]));
+
   if FileExists('config.json') then
   begin
     config := TJSONObject(GetJSON(readfile('config.json')));
@@ -106,7 +111,7 @@ var
 begin
   f_list := FindAllFiles(path,'*', true );
   logwrite('[ Creating md5list.json ]'+LineEnding+'Found '+inttostr(f_list.count)+' files:');
-
+  md5obj.add('augmc_version',version);
   for i:=0 to f_list.Count-1 do
   begin
     filename := f_list[i];
@@ -145,5 +150,6 @@ end;
 begin
   requests := TRequests.Create;
   md5obj := TJSONObject.Create;
+  version := '1.1.3';
 end.
 

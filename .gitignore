@@ -6,3 +6,4 @@ backup/*
 *.exe
 config.json
 augmc.res
+md5list.json

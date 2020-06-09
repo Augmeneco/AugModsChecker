@@ -42,7 +42,7 @@ type
     hasmd5: Boolean;
     procedure Execute; override;
     procedure GetFilesList;
-    procedure CompareFiles(tree: TJSONArray;comp_path: string);
+    procedure CompareFiles(tree: TJSONArray; comp_path: string;dir_name_url: string);
     procedure UpdateFiles(comp_path: string;flist: TJSONArray);
     constructor Create(name: string);
 end;
@@ -295,7 +295,7 @@ begin
   );
   tree := TJSONObject(requests.json()).Arrays['tree'];
   logwrite(Format('Parsed %d files from %s',[tree.Count,URL]));
-  CompareFiles(tree,main.Form1.EditModsPath.text);
+  CompareFiles(tree,main.Form1.EditModsPath.text,'');
 end;
 
 constructor TGit.Create(name: string);
@@ -315,7 +315,7 @@ begin
   //MD5List := TJSONObject(GetJSON(readfile('md5list.json')));
 end;
 
-procedure TGit.CompareFiles(tree: TJSONArray; comp_path: string);
+procedure TGit.CompareFiles(tree: TJSONArray; comp_path: string;dir_name_url: string);
 var
   i,i1: Integer;
   dir_tree, FilesList: TJSONArray;
@@ -339,7 +339,7 @@ begin
       dir_tree := TJSONObject(requests.json()).Arrays['tree'];
       logwrite('Recursively checking a '+dir_name+' folder');
       CreateDir(dir_name);
-      CompareFiles(dir_tree,dir_name);
+      CompareFiles(dir_tree,dir_name,fobj['path'].AsString);
     end;
     if ignore.IndexOf(fobj['path'].AsString) <> -1 then
        continue;
@@ -347,9 +347,15 @@ begin
     tmpobj := TJSONObject.Create;
     tmpobj.add('name',fobj['path'].AsString);
 
-    farray := comp_path.split('\');
-
-    tmpobj.add('url',Format('https://raw.githubusercontent.com/%s/master/%s/%s',[url,farray[Length(farray)-1],fobj['path'].AsString]));
+    if dir_name_url <> '' then
+    begin
+      //farray := comp_path.split('\');
+      tmpobj.add('url',Format('https://raw.githubusercontent.com/%s/master/%s/%s',[url,dir_name_url,fobj['path'].AsString]));
+    end
+    else
+    begin
+      tmpobj.add('url',Format('https://raw.githubusercontent.com/%s/master/%s',[url,fobj['path'].AsString]));
+    end;
 
     all_files := FindAllFiles(comp_path,'*', False);
     for i1:=0 to all_files.Count-1 do
@@ -396,6 +402,7 @@ begin
 
     if FileExists(comp_path+'\'+fobj['name'].AsString) then
        DeleteFile(comp_path+'\'+fobj['name'].AsString);
+    logwrite(fobj['url'].AsString);
     logwrite('Download '+fobj['name'].AsString);
     requests.Download(
       fobj['url'].AsString,
