@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Menus,
-  ComCtrls, utils, fpjson, jsonparser, fileutil, md5;
+  ComCtrls, utils, fpjson, jsonparser, fileutil, md5, windows;
 
 type
 
@@ -53,14 +53,19 @@ procedure TForm1.FormCreate(Sender: TObject);
 var
   config: TJSONObject;
 begin
-
+  Form1.Caption := Form1.Caption;
   requests.get('https://raw.githubusercontent.com/Augmeneco/AugModsChecker/master/version');
-  if requests.text = '1.1.3'+#10 then
-     logwrite(Format('|%s|',[requests.text]));
+  if requests.text <> version then
+  begin
+    ShowMessage(Format('Your version of AMC (%s) is outdated%sThe latest version is %s',
+    [version,LineEnding,requests.text]));
+    ShellExecute(0, nil,'https://augmeneco.github.io/AugModsChecker/',nil,nil,1);
+    Halt;
+  end;
 
   if FileExists('config.json') then
   begin
-    config := TJSONObject(GetJSON(readfile('config.json')));
+    config := TJSONObject(GetJSON(utils.readfile('config.json')));
     EditModsPath.Text := config['modspath'].AsString;
     EditModsURL.Text := config['modsurl'].AsString;
     logWrite('Loaded config.json');
@@ -99,7 +104,7 @@ begin
   config := TJSONObject.Create;
   config.Add('modspath',EditModsPath.Text);
   config.Add('modsurl',EditModsURL.Text);
-  writefile('config.json',config.FormatJSON());
+  utils.writefile('config.json',config.FormatJSON());
   logwrite('Saved config.json');
 end;
 
@@ -122,7 +127,7 @@ begin
     md5obj.Add(filename,md5);
     Form1.Logger.Lines.Add(#9+filename);
   end;
-  writefile('md5list.json',md5obj.FormatJSON());
+  utils.writefile('md5list.json',md5obj.FormatJSON());
   logwrite('Saved md5list.json');
 end;
 
@@ -137,7 +142,7 @@ var
 begin
   if veryBadToLower(EditModsPath.Text) = 'minecraft' then
   begin
-    AppDataDir := GetEnvironmentVariable('appdata');
+    AppDataDir := SysUtils.GetEnvironmentVariable('appdata');
     if DirectoryExists(AppDataDir+'\.minecraft') = True then
       EditModsPath.Text := AppDataDir+'\.minecraft\mods'
     else
