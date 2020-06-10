@@ -3,7 +3,7 @@
 The program for synchronization of game modpacks.
 
 ## Download binaries:
-[Download](https://github.com/Augmeneco/AugModsChecker/releases/download/1.1/AugMC.zip)
+[Download](https://github.com/Augmeneco/AugModsChecker/releases/download/1.1.3/AugMC.zip)
 
 ## Usage:
   - Install AugMC
